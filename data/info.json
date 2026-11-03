@@ -1,0 +1,6 @@
+[
+  { "animal": "Dog",    "audio": "dog.mp3" },
+  { "animal": "Donkey", "audio": "donkey.mp3" },
+  { "animal": "Goose",  "audio": "goose.mp3" },
+  { "animal": "Sheep",  "audio": "sheep.mp3" }
+]
