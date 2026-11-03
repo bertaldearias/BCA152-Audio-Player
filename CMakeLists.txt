@@ -1,2 +1,3 @@
-idf_component_register(SRCS "audio_player.cpp"
-                       INCLUDE_DIRS ".")
+cmake_minimum_required(VERSION 3.16.0)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(BCA152-Audio-Player)
