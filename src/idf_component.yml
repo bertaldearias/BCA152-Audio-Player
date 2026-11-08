@@ -1,6 +1,0 @@
-dependencies:
-  espressif/button: "^3.2.0"
-  lvgl/lvgl: "^8.3.0"
-  espressif/esp_lvgl_port: "^2.3.0"
-  espressif/esp_lcd_panel_io_additions: "*"
-  chmorgan/esp-audio-player: "^1.0.7"
