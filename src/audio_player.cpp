@@ -63,6 +63,10 @@ extern "C" void app_main(void)
     conf.format_if_mount_failed = false;
     printf("SPIFFS: %s\n", esp_err_to_name(esp_vfs_spiffs_register(&conf)));
 
+    app::Settings::init();
+    uint8_t savedVol = app::Settings::loadU8("vol", 50);
+    app::g_vol = (savedVol > 100) ? 50 : savedVol; // restore the last volume
+
     m_app_btn.init();
     m_app_audio.init(audio_mute_function);
     m_app_ui.init(&m_app_btn, &m_app_audio);
