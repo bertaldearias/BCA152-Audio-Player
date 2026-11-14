@@ -26,8 +26,9 @@ extern "C" esp_err_t __real_i2s_write(i2s_port_t port, const void *src, size_t s
 extern "C" esp_err_t __wrap_i2s_write(i2s_port_t port, const void *src, size_t size,
                                       size_t *written, TickType_t wait)
 {
+    const int BOOST = 3; // 1 = normal, 2 = double, 3 = triple. Lower it if the sound crackles.
     int vol = (app::g_user_muted || app::g_sys_muted) ? 0 : app::g_vol;
-    int gain = (vol * vol) / 100; // 0..100, quadratic curve feels more natural
+    int gain = vol * BOOST; // linear: volume 50 with BOOST 3 = 150%
     const int16_t *in = static_cast<const int16_t *>(src);
     int16_t buf[512];
     size_t done = 0;
@@ -38,7 +39,12 @@ extern "C" esp_err_t __wrap_i2s_write(i2s_port_t port, const void *src, size_t s
         size_t n = std::min(sizeof(buf), size - done);
         size_t samples = n / 2;
         for (size_t i = 0; i < samples; i++)
-            buf[i] = (int16_t)(((int)in[done / 2 + i] * gain) / 100);
+        {
+            int v = ((int)in[done / 2 + i] * gain) / 100;
+            if (v > 32767) v = 32767;   // clamp so loud peaks don't wrap around
+            if (v < -32768) v = -32768;
+            buf[i] = (int16_t)v;
+        }
         size_t w = 0;
         err = __real_i2s_write(port, buf, samples * 2, &w, wait);
         done += w;
