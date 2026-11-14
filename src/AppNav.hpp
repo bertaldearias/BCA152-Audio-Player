@@ -16,7 +16,7 @@ namespace app
     class AppNav
     {
     private:
-        int m_pos;
+        int m_pos = 0;
         std::vector<Animal_t> m_animals;
 
     public:
@@ -27,10 +27,7 @@ namespace app
             m_pos = 0;
         }
 
-        Animal_t &getCurrent(void)
-        {
-            return m_animals[m_pos];
-        }
+        Animal_t &getCurrent(void) { return m_animals[m_pos]; }
 
         Animal_t &next(void)
         {
@@ -43,5 +40,5 @@ namespace app
             m_pos = (m_pos + m_animals.size() - 1) % m_animals.size();
             return m_animals[m_pos];
         }
-    }; // class end
-} // namespace end
+    };
+}
