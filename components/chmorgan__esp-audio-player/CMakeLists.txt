@@ -1,4 +1,3 @@
-
 set(srcs
     "audio_player.cpp"
 )
@@ -7,7 +6,7 @@ set(includes
     "include"
 )
 
-set(requires "")
+set(requires driver esp_driver_i2s esp_driver_gpio)
 
 if(CONFIG_AUDIO_PLAYER_ENABLE_MP3)
     list(APPEND srcs "audio_mp3.cpp")
@@ -20,7 +19,6 @@ if(CONFIG_AUDIO_PLAYER_ENABLE_WAV)
     list(APPEND srcs "audio_wav.cpp")
 endif()
 
-idf_component_register(SRCS "${srcs}"
-                       REQUIRES "${requires}"
-                       INCLUDE_DIRS "${includes}"
-)
+idf_component_register(SRCS ${srcs}
+                       INCLUDE_DIRS ${includes}
+                       REQUIRES ${requires})

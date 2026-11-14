@@ -17,26 +17,18 @@
 
 # Search for src files
 file(GLOB_RECURSE LVGL_SOURCES
-    lvgl/src/*.c
-    lvgl/examples/*.c
-    lvgl/demos/*.c)
+    lvgl/src/*.c)
 
-file(GLOB_RECURSE LV_PORT_SOURCES lv_port/*.c)
-
-# Resister components
+# Register component (Box-Lite lv_port and bsp removed; OLED port will be our own)
 idf_component_register(
     SRCS
         ${LVGL_SOURCES}
-        ${LV_PORT_SOURCES}
     INCLUDE_DIRS
         "."
         "include"
         "lvgl/src"
-        "lvgl/demos"
-        "lv_port"
     REQUIRES
-        bsp
-        main)
+        driver)
 
 # Some of warinings from LVGL. Block them.
 target_compile_options(${COMPONENT_LIB} PRIVATE -w)
