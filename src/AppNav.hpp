@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "json.hpp"
+#include "Settings.hpp"
 
 namespace app
 {
@@ -24,8 +25,14 @@ namespace app
         {
             std::ifstream fs{"/spiffs/info.json"};
             m_animals = nlohmann::json::parse(fs);
-            m_pos = 0;
+
+            // restore the last animal; fall back to the first if the saved index is no longer valid
+            m_pos = Settings::loadU8("idx", 0);
+            if (m_pos >= (int)m_animals.size())
+                m_pos = 0;
         }
+
+        int index(void) const { return m_pos; }
 
         Animal_t &getCurrent(void) { return m_animals[m_pos]; }
 
