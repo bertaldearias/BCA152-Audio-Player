@@ -1,11 +1,16 @@
 #pragma once
 #include <cstdio>
+#include <cstring>
+#include <cstdint>
+#include <cmath>
+#include <algorithm>
 #include <string>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "esp_err.h"
 #include "driver/i2s.h"
 #include "audio_player.h"
+#include "Settings.hpp"
 
 namespace app
 {
@@ -111,15 +116,63 @@ namespace app
                 audio_player_stop();
         }
 
+        // Short tone through the same I2S output (goes through the volume wrapper)
+        void beep(int freq, int ms)
+        {
+            if (m_player_state == AUDIO_PLAYER_STATE_PLAYING)
+                return; // a sound is playing, skip the beep to avoid mixing
+
+            printf("beep %d Hz\n", freq);
+            bool prevSysMute = g_sys_muted;
+            g_sys_muted = false; // the player's pop-protection mute must not silence the beep
+
+            const int rate = 44100;
+            i2s_set_clk(I2S_NUM_0, rate, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_STEREO);
+
+            const int total = rate * ms / 1000;
+            const int fade = rate / 200; // 5 ms fade in/out, prevents clicks
+            const float step = 2.0f * 3.14159265f * freq / rate;
+            float phase = 0;
+            int16_t buf[128 * 2];
+            size_t w = 0;
+
+            for (int done = 0; done < total;)
+            {
+                int n = std::min(128, total - done);
+                for (int i = 0; i < n; i++)
+                {
+                    int pos = done + i;
+                    float env = 1.0f;
+                    if (pos < fade) env = (float)pos / fade;
+                    else if (total - pos < fade) env = (float)(total - pos) / fade;
+                    int16_t s = (int16_t)(sinf(phase) * 30000.0f * env);
+                    phase += step;
+                    buf[2 * i] = s;
+                    buf[2 * i + 1] = s;
+                }
+                i2s_write(I2S_NUM_0, buf, n * 4, &w, pdMS_TO_TICKS(100));
+                done += n;
+            }
+
+            memset(buf, 0, sizeof(buf)); // a little silence so the tone ends cleanly
+            i2s_write(I2S_NUM_0, buf, sizeof(buf), &w, pdMS_TO_TICKS(100));
+
+            g_sys_muted = prevSysMute;
+        }
+
         uint8_t volumeUp(void)
         {
             if (g_vol < 100) g_vol = g_vol + 10;
+            Settings::saveU8("vol", g_vol); // remember the volume
+            beep(1200, 80);
             return getVolume();
         }
 
         uint8_t volumeDown(void)
         {
             if (g_vol > 0) g_vol = g_vol - 10;
+            Settings::saveU8("vol", g_vol); // remember the volume
+            beep(800, 80);
             return getVolume();
         }
 
