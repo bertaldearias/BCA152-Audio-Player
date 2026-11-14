@@ -4,6 +4,7 @@
 #include <cstdio>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/gpio.h"
 #include "Oled.hpp"
 #include "AppButton.hpp"
 #include "AppNav.hpp"
@@ -14,6 +15,9 @@ namespace app
     class AppUi
     {
     private:
+        // Red LED: ON when the volume control is active, OFF when the playlist is active
+        static constexpr gpio_num_t PIN_RED_LED = GPIO_NUM_18;
+
         inline static std::mutex m_ui_access;
 
         Oled m_oled;
@@ -64,6 +68,9 @@ namespace app
         {
             m_oled.clear();
 
+            // red LED shows which control is active (on = volume)
+            gpio_set_level(PIN_RED_LED, m_playlist_active ? 0 : 1);
+
             // --- volume row (top) ---
             uint8_t vol = m_app_audio->getVolume();
             m_oled.rect(17, 3, 94, 8);
@@ -97,6 +104,7 @@ namespace app
             (void)play;
             m_app_audio->stop(); // a new animal starts from the beginning
             m_playing = false;
+            Settings::saveU8("idx", (uint8_t)m_nav.index()); // remember the animal
             render();
         }
 
@@ -111,6 +119,10 @@ namespace app
         {
             m_app_button = button;
             m_app_audio = audio;
+
+            gpio_reset_pin(PIN_RED_LED);
+            gpio_set_direction(PIN_RED_LED, GPIO_MODE_OUTPUT);
+            gpio_set_level(PIN_RED_LED, 0);
 
             m_oled.init();
             m_nav.init();
